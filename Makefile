@@ -1,40 +1,79 @@
-# Compiler and flags
-CC = gcc
-CFLAGS = -Wall -Wextra -fopenmp -Iinclude -O3
+# Project Settings
+debug ?= 0
+NAME := matmul
+SRC_DIR := src
+BUILD_DIR := build
+INCLUDE_DIR := include
+LIB_DIR := lib
+TESTS_DIR := tests
+BIN_DIR := bin
 
-# Directories
-SRCDIR = src
-BUILDDIR = build
-INCDIR = include
+# Compiler and tools
+CC := clang-18
+LINTER := clang-tidy
+FORMATTER := clang-format
 
-# Source and object files
-SRCS = $(wildcard $(SRCDIR)/*.c)
-OBJS = $(patsubst $(SRCDIR)/%.c, $(BUILDDIR)/%.o, $(SRCS))
+# Generate paths for all object files
+OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.c))
+LIB_OBJS := $(patsubst $(LIB_DIR)/%.c,$(BUILD_DIR)/lib/%.o, $(wildcard $(LIB_DIR)/**/*.c))
+TEST_OBJS := $(patsubst $(TESTS_DIR)/%.c,$(BUILD_DIR)/tests/%.o, $(wildcard $(TESTS_DIR)/*.c))
+OBJS_NO_MAIN := $(filter-out $(BUILD_DIR)/main.o, $(OBJS))
 
-# Target executable
-TARGET = $(BUILDDIR)/main
+# Compiler and linker flags
+CFLAGS := -std=gnu17 -D_GNU_SOURCE -D__STDC_WANT_LIB_EXT1__ -Wall -Wextra -pedantic
+LDFLAGS := -lm
 
-# Default rule: compile and link the project
-all: $(TARGET)
+ifeq ($(debug), 1)
+	CFLAGS += -g -O0
+else
+	CFLAGS += -O3
+endif
 
-# Linking
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+# Targets
 
-# Compiling source files into object files
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+# Default target: build the main executable
+all: dir $(BIN_DIR)/$(NAME) $(BIN_DIR)/$(NAME)_test
 
-# Create the build directory if it doesn't exist
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
+# Build main executable from object files
+$(BIN_DIR)/$(NAME): $(OBJS) $(LIB_OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-# Clean the build directory
+# Build object files for source files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | dir
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
+
+# Build object files for library files
+$(BUILD_DIR)/lib/%.o: $(LIB_DIR)/%.c | dir
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
+
+# Build test executable
+$(BIN_DIR)/$(NAME)_test: $(TEST_OBJS) $(OBJS_NO_MAIN) $(LIB_OBJS) | dir
+	$(CC) $(CFLAGS) $(LDFLAGS) -lcunit -o $@ $^
+
+# Compile test objects
+$(BUILD_DIR)/tests/%.o: $(TESTS_DIR)/%.c | dir
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
+
+# Run CUnit tests
+test: $(BIN_DIR)/$(NAME)_test
+	@$(BIN_DIR)/$(NAME)_test
+
+# Run linter on source, include, and test directories
+lint:
+	@$(LINTER) --config-file=.clang-tidy $(SRC_DIR)/* $(INCLUDE_DIR)/* $(TESTS_DIR)/* -- $(CFLAGS)
+
+# Run formatter on source, include, and test directories
+format:
+	@$(FORMATTER) -style=file -i $(SRC_DIR)/* $(INCLUDE_DIR)/* $(TESTS_DIR)/*
+
+# Directory setup
+dir:
+	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
+
+# Clean build and bin directories
 clean:
-	rm -rf $(BUILDDIR)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
-# Run the compiled program
-run: $(TARGET)
-	./$(TARGET)
-
-.PHONY: all run clean
+.PHONY: all test lint format dir clean

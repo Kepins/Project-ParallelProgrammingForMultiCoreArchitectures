@@ -2,7 +2,7 @@
 #define RANDOM_H
 #include "matrix.h"
 
-void init_rand();
+void init_rand(void);
 
 void fill_with_random_numbers(Matrix matrix);
 
