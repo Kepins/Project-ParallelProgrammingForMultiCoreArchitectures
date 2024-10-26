@@ -15,5 +15,6 @@ Matrix allocate_matrix_data(uint64_t w, uint64_t h);
 void free_matrix_data(Matrix);
 
 void multiplicate(Matrix a, Matrix b, Matrix c);
+void openmp_multiplicate(Matrix a, Matrix b, Matrix c);
 
 #endif

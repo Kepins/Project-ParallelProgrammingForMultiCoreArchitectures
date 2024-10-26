@@ -20,7 +20,7 @@ TEST_OBJS := $(patsubst $(TESTS_DIR)/%.c,$(BUILD_DIR)/tests/%.o, $(wildcard $(TE
 OBJS_NO_MAIN := $(filter-out $(BUILD_DIR)/main.o, $(OBJS))
 
 # Compiler and linker flags
-CFLAGS := -std=gnu17 -D_GNU_SOURCE -D__STDC_WANT_LIB_EXT1__ -Wall -Wextra -pedantic
+CFLAGS := -std=gnu17 -fopenmp -D_GNU_SOURCE -D__STDC_WANT_LIB_EXT1__ -Wall -Wextra -pedantic
 LDFLAGS := -lm
 
 ifeq ($(debug), 1)
