@@ -34,12 +34,9 @@ void multiplicate(Matrix a, Matrix b, Matrix c) {
 }
 
 void openmp_multiplicate(Matrix a, Matrix b, Matrix c) {
-  #pragma omp parallel
-  {
-    #pragma omp for
-    for (uint64_t number = 0; number < c.h * c.w; number++) {
-      uint64_t i = number / c.w;
-      uint64_t j = number % c.w;
+  #pragma omp parallel for collapse(2)
+  for (uint64_t i = 0; i < c.h; i++) {
+    for (uint64_t j = 0; j < c.w; j++) {
       c.d[i][j] = 0.0;
       for (uint64_t k = 0; k < a.w; k++) {
         c.d[i][j] += a.d[i][k] * b.d[k][j];
