@@ -40,11 +40,16 @@ void testOPENMPMULTIPLICATION(void) {
   assert_is_the_same(correct_result, result);
 }
 
+void testOPENMP2MULTIPLICATION(void) {
+  openmp_multiplicate2(m1, m2, result);
+  assert_is_the_same(correct_result, result);
+}
+
 int init_suite_square_matrices(void) {
-  const uint64_t MATRIX_M1_HEIGHT = 100;
-  const uint64_t MATRIX_M1_WIDTH = 100;
+  const uint64_t MATRIX_M1_HEIGHT = 128;
+  const uint64_t MATRIX_M1_WIDTH = 128;
   const uint64_t MATRIX_M2_HEIGHT = MATRIX_M1_WIDTH;
-  const uint64_t MATRIX_M2_WIDTH = 100;
+  const uint64_t MATRIX_M2_WIDTH = 128;
   const uint64_t MATRIX_RESULT_HEIGHT = MATRIX_M1_HEIGHT;
   const uint64_t MATRIX_RESULT_WIDTH = MATRIX_M2_WIDTH;
 
@@ -60,10 +65,10 @@ int init_suite_square_matrices(void) {
 }
 
 int init_suite_not_square_matrices(void) {
-  const uint64_t MATRIX_M1_HEIGHT = 20;
-  const uint64_t MATRIX_M1_WIDTH = 100;
+  const uint64_t MATRIX_M1_HEIGHT = 32;
+  const uint64_t MATRIX_M1_WIDTH = 128;
   const uint64_t MATRIX_M2_HEIGHT = MATRIX_M1_WIDTH;
-  const uint64_t MATRIX_M2_WIDTH = 500;
+  const uint64_t MATRIX_M2_WIDTH = 512;
   const uint64_t MATRIX_RESULT_HEIGHT = MATRIX_M1_HEIGHT;
   const uint64_t MATRIX_RESULT_WIDTH = MATRIX_M2_WIDTH;
 
@@ -113,7 +118,9 @@ int main(void) {
   if ((NULL ==
        CU_add_test(pSuiteSquare, "test multiplicate()", testMULTIPLICATION)) ||
       (NULL == CU_add_test(pSuiteSquare, "test openmp_multiplicate()",
-                           testOPENMPMULTIPLICATION))) {
+                           testOPENMPMULTIPLICATION)) ||
+      (NULL == CU_add_test(pSuiteSquare, "test openmp_multiplicate2()",
+                           testOPENMP2MULTIPLICATION))) {
     CU_cleanup_registry();
     return CU_get_error();
   }
@@ -130,7 +137,9 @@ int main(void) {
   if ((NULL == CU_add_test(pSuiteNonSquare, "test multiplicate()",
                            testMULTIPLICATION)) ||
       (NULL == CU_add_test(pSuiteNonSquare, "test openmp_multiplicate()",
-                           testOPENMPMULTIPLICATION))) {
+                           testOPENMPMULTIPLICATION)) ||
+      (NULL == CU_add_test(pSuiteNonSquare, "test openmp_multiplicate2()",
+                           testOPENMP2MULTIPLICATION))) {
     CU_cleanup_registry();
     return CU_get_error();
   }
