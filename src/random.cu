@@ -17,7 +17,7 @@ void fill_with_random_numbers(Matrix matrix) {
   const float MAX_VALUE = 10;
   for (uint64_t i = 0; i < matrix.h; i++) {
     for (uint64_t j = 0; j < matrix.w; j++) {
-      matrix.d[i][j] = random_float_in_range(MIN_VALUE, MAX_VALUE);
+      *get_element(matrix, i, j) = random_float_in_range(MIN_VALUE, MAX_VALUE);
     }
   }
 }

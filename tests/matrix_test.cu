@@ -11,9 +11,9 @@ static Matrix m1, m2, result, correct_result;
 void correct_multiplicate(Matrix a, Matrix b, Matrix c) {
   for (uint64_t i = 0; i < c.h; i++) {
     for (uint64_t j = 0; j < c.w; j++) {
-      c.d[i][j] = 0.0;
+      *get_element(c, i, j) = 0.0;
       for (uint64_t k = 0; k < a.w; k++) {
-        c.d[i][j] += a.d[i][k] * b.d[k][j];
+        *get_element(c, i, j) += *get_element(a, i, k) * *get_element(b, k, j);
       }
     }
   }
@@ -25,7 +25,7 @@ void assert_is_the_same(Matrix a, Matrix b) {
 
   for (uint64_t i = 0; i < a.h; i++) {
     for (uint64_t j = 0; j < a.w; j++) {
-      CU_ASSERT_DOUBLE_EQUAL_FATAL(a.d[i][j], b.d[i][j], 10e-3);
+      CU_ASSERT_DOUBLE_EQUAL_FATAL(*get_element(a, i, j), *get_element(b, i, j), 10e-3);
     }
   }
 }

@@ -3,39 +3,36 @@
 #include "../include/matrix.h"
 #include "../include/random.h"
 
+float* get_element(Matrix m, int row, int col) { return &(m.d[row * m.w + col]); }
+
 Matrix allocate_matrix_data(uint64_t width, uint64_t height) {
   Matrix matrix;
   matrix.w = width;
   matrix.h = height;
 
-  matrix.d = (float **)malloc(height * sizeof(float *));
-  for (uint64_t i = 0; i < height; i++) {
-    matrix.d[i] = (float *)malloc(width * sizeof(float));
-  }
+  matrix.d = new float[width * height];
+
   return matrix;
 }
 
 void fill_with(Matrix matrix, double val) {
   for (uint64_t i = 0; i < matrix.h; i++) {
     for (uint64_t j = 0; j < matrix.w; j++) {
-      matrix.d[i][j] = val;
+      *get_element(matrix, i, j) = val;
     }
   }
 }
 
 void free_matrix_data(Matrix matrix) {
-  for (uint64_t i = 0; i < matrix.h; i++) {
-    free(matrix.d[i]);
-  }
   free(matrix.d);
 }
 
 void multiplicate(Matrix a, Matrix b, Matrix c) {
   for (uint64_t i = 0; i < c.h; i++) {
     for (uint64_t j = 0; j < c.w; j++) {
-      c.d[i][j] = 0.0;
+      *get_element(c, i, j) = 0.0f;
       for (uint64_t k = 0; k < a.w; k++) {
-        c.d[i][j] += a.d[i][k] * b.d[k][j];
+        *get_element(c, i, j) += *get_element(a, i, k) * *get_element(b, k, j);
       }
     }
   }
@@ -45,9 +42,9 @@ void openmp_multiplicate(Matrix a, Matrix b, Matrix c) {
 #pragma omp parallel for collapse(2)
   for (uint64_t i = 0; i < c.h; i++) {
     for (uint64_t j = 0; j < c.w; j++) {
-      c.d[i][j] = 0.0;
+      *get_element(c, i, j) = 0.0f;
       for (uint64_t k = 0; k < a.w; k++) {
-        c.d[i][j] += a.d[i][k] * b.d[k][j];
+        *get_element(c, i, j) += *get_element(a, i, k) * *get_element(b, k, j);
       }
     }
   }
@@ -78,11 +75,11 @@ void openmp_multiplicate2(Matrix a, Matrix b, Matrix c) {
               uint64_t global_b_row = bk * BLOCK_SIZE + k;
               uint64_t global_b_col = bj * BLOCK_SIZE + j;
               // Accumulate the partial sum
-              partial_sum += a.d[global_a_row][global_a_col] *
-                             b.d[global_b_row][global_b_col];
+              partial_sum += *get_element(a, global_a_row, global_a_col) *
+                             *get_element(b, global_b_row, global_b_col);
             }
             // Update the result matrix C
-            c.d[global_c_row][global_c_col] += partial_sum;
+            *get_element(c, global_c_row, global_c_col) += partial_sum;
           }
         }
       }

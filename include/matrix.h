@@ -6,10 +6,12 @@
 #include <stdlib.h>
 
 typedef struct {
-  float **d;
+  float *d;
   uint64_t w;
   uint64_t h;
 } Matrix;
+
+float* get_element(Matrix m, int row, int col);
 
 Matrix allocate_matrix_data(uint64_t w, uint64_t h);
 void free_matrix_data(Matrix);
