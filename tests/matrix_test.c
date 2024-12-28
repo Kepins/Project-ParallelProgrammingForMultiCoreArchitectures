@@ -31,17 +31,32 @@ void assert_is_the_same(Matrix a, Matrix b) {
 }
 
 void testMULTIPLICATION(void) {
+  fill_with_random_numbers(result);
   multiplicate(m1, m2, result);
   assert_is_the_same(correct_result, result);
 }
 
 void testOPENMPMULTIPLICATION(void) {
+  fill_with_random_numbers(result);
   openmp_multiplicate(m1, m2, result);
   assert_is_the_same(correct_result, result);
 }
 
 void testOPENMP2MULTIPLICATION(void) {
+  fill_with_random_numbers(result);
   openmp_multiplicate2(m1, m2, result);
+  assert_is_the_same(correct_result, result);
+}
+
+void testCUDAMULTIPLICATION(void) {
+  fill_with_random_numbers(result);
+  cuda_multiplicate(m1, m2, result);
+  assert_is_the_same(correct_result, result);
+}
+
+void testCUDAMULTIPLICATION2(void) {
+  fill_with_random_numbers(result);
+  cuda_multiplicate2(m1, m2, result);
   assert_is_the_same(correct_result, result);
 }
 
@@ -120,7 +135,11 @@ int main(void) {
       (NULL == CU_add_test(pSuiteSquare, "test openmp_multiplicate()",
                            testOPENMPMULTIPLICATION)) ||
       (NULL == CU_add_test(pSuiteSquare, "test openmp_multiplicate2()",
-                           testOPENMP2MULTIPLICATION))) {
+                           testOPENMP2MULTIPLICATION)) ||
+      (NULL == CU_add_test(pSuiteSquare, "test cuda_multiplicate()",
+                           testCUDAMULTIPLICATION)) ||
+      (NULL == CU_add_test(pSuiteSquare, "test cuda_multiplicate2()",
+                           testCUDAMULTIPLICATION2))) {
     CU_cleanup_registry();
     return CU_get_error();
   }
@@ -139,7 +158,11 @@ int main(void) {
       (NULL == CU_add_test(pSuiteNonSquare, "test openmp_multiplicate()",
                            testOPENMPMULTIPLICATION)) ||
       (NULL == CU_add_test(pSuiteNonSquare, "test openmp_multiplicate2()",
-                           testOPENMP2MULTIPLICATION))) {
+                           testOPENMP2MULTIPLICATION)) ||
+      (NULL == CU_add_test(pSuiteNonSquare, "test cuda_multiplicate()",
+                           testCUDAMULTIPLICATION)) ||
+      (NULL == CU_add_test(pSuiteNonSquare, "test cuda_multiplicate2()",
+                           testCUDAMULTIPLICATION2))) {
     CU_cleanup_registry();
     return CU_get_error();
   }
