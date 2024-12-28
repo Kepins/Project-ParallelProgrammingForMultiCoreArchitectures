@@ -11,7 +11,7 @@ typedef struct {
   uint64_t h;
 } Matrix;
 
-float* get_element(Matrix m, int row, int col);
+__host__ __device__ float* get_element(Matrix m, int row, int col);
 
 Matrix allocate_matrix_data(uint64_t w, uint64_t h);
 void free_matrix_data(Matrix);
