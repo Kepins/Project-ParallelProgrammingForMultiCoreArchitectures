@@ -9,22 +9,22 @@ TESTS_DIR := tests
 BIN_DIR := bin
 
 # Compiler and tools
-CC := clang-18
+CC := nvcc
 LINTER := clang-tidy
 FORMATTER := clang-format
 
 # Generate paths for all object files
-OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.c))
-LIB_OBJS := $(patsubst $(LIB_DIR)/%.c,$(BUILD_DIR)/lib/%.o, $(wildcard $(LIB_DIR)/**/*.c))
-TEST_OBJS := $(patsubst $(TESTS_DIR)/%.c,$(BUILD_DIR)/tests/%.o, $(wildcard $(TESTS_DIR)/*.c))
+OBJS := $(patsubst $(SRC_DIR)/%.cu,$(BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cu))
+LIB_OBJS := $(patsubst $(LIB_DIR)/%.cu,$(BUILD_DIR)/lib/%.o, $(wildcard $(LIB_DIR)/**/*.cu))
+TEST_OBJS := $(patsubst $(TESTS_DIR)/%.cu,$(BUILD_DIR)/tests/%.o, $(wildcard $(TESTS_DIR)/*.cu))
 OBJS_NO_MAIN := $(filter-out $(BUILD_DIR)/main.o, $(OBJS))
 
 # Compiler and linker flags
-CFLAGS := -std=gnu17 -fopenmp -D_GNU_SOURCE -D__STDC_WANT_LIB_EXT1__ -Wall -Wextra -pedantic
+CFLAGS := -Xcompiler -fopenmp
 LDFLAGS := -lm
 
 ifeq ($(debug), 1)
-	CFLAGS += -g -O0
+	CFLAGS += -G
 else
 	CFLAGS += -O3
 endif
@@ -39,11 +39,11 @@ $(BIN_DIR)/$(NAME): $(OBJS) $(LIB_OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 # Build object files for source files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | dir
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cu | dir
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
 
 # Build object files for library files
-$(BUILD_DIR)/lib/%.o: $(LIB_DIR)/%.c | dir
+$(BUILD_DIR)/lib/%.o: $(LIB_DIR)/%.cu | dir
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
 
@@ -52,7 +52,7 @@ $(BIN_DIR)/$(NAME)_test: $(TEST_OBJS) $(OBJS_NO_MAIN) $(LIB_OBJS) | dir
 	$(CC) $(CFLAGS) $(LDFLAGS) -lcunit -o $@ $^
 
 # Compile test objects
-$(BUILD_DIR)/tests/%.o: $(TESTS_DIR)/%.c | dir
+$(BUILD_DIR)/tests/%.o: $(TESTS_DIR)/%.cu | dir
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
 

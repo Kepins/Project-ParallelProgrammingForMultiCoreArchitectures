@@ -17,7 +17,7 @@ int main(void) {
   const uint64_t MATRIX_C_WIDTH = MATRIX_B_WIDTH;
 
   double start, end;
-  double time_spent, time_spent_p, time_spent_p2;
+  double time_spent, time_spent_p, time_spent_p2, time_spent_c;
 
   Matrix a = allocate_matrix_data(MATRIX_A_WIDTH, MATRIX_A_HEIGHT);
   Matrix b = allocate_matrix_data(MATRIX_B_WIDTH, MATRIX_B_HEIGHT);
@@ -50,6 +50,15 @@ int main(void) {
   printf("Openmp2 matrix multiplication took %lf seconds\n", time_spent_p2);
 
   printf("Speed up: %lf\n", time_spent / time_spent_p2);
+
+  start = omp_get_wtime();
+  cuda_multiplicate(a, b, c);
+  end = omp_get_wtime();
+
+  time_spent_c = (double)(end - start);
+  printf("CUDA matrix multiplication took %lf seconds\n", time_spent_c);
+
+  printf("Speed up: %lf\n", time_spent / time_spent_c);
 
   free_matrix_data(c);
   free_matrix_data(b);
