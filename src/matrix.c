@@ -42,7 +42,7 @@ void multiplicate(Matrix a, Matrix b, Matrix c) {
 }
 
 void openmp_multiplicate(Matrix a, Matrix b, Matrix c) {
-  #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
   for (uint64_t i = 0; i < c.h; i++) {
     for (uint64_t j = 0; j < c.w; j++) {
       c.d[i][j] = 0.0;
@@ -59,26 +59,27 @@ void openmp_multiplicate2(Matrix a, Matrix b, Matrix c) {
 
   uint64_t block_num_i = c.h / BLOCK_SIZE;
   uint64_t block_num_j = c.w / BLOCK_SIZE;
-  uint64_t block_num_k = a.w / BLOCK_SIZE;  // a.w or b.h
+  uint64_t block_num_k = a.w / BLOCK_SIZE; // a.w or b.h
 
-  #pragma omp parallel for collapse(2)
-  for (uint64_t bi=0; bi < block_num_i; bi++){
-    for (uint64_t bj=0; bj < block_num_j; bj++){
-      for (uint64_t bk=0; bk < block_num_k; bk++){
-        // C bi,bj - partial sum from: A bi,bk and  B bk,bj 
-        for (uint64_t i=0; i < BLOCK_SIZE; i++){
-          for (uint64_t j=0; j < BLOCK_SIZE; j++){
+#pragma omp parallel for collapse(2)
+  for (uint64_t bi = 0; bi < block_num_i; bi++) {
+    for (uint64_t bj = 0; bj < block_num_j; bj++) {
+      for (uint64_t bk = 0; bk < block_num_k; bk++) {
+        // C bi,bj - partial sum from: A bi,bk and  B bk,bj
+        for (uint64_t i = 0; i < BLOCK_SIZE; i++) {
+          for (uint64_t j = 0; j < BLOCK_SIZE; j++) {
             uint64_t global_c_row = bi * BLOCK_SIZE + i;
             uint64_t global_c_col = bj * BLOCK_SIZE + j;
             double partial_sum = 0.0;
             for (uint64_t k = 0; k < BLOCK_SIZE; k++) {
-                // Calculate the indices in the global matrix
-                uint64_t global_a_row = bi * BLOCK_SIZE + i;
-                uint64_t global_a_col = bk * BLOCK_SIZE + k;
-                uint64_t global_b_row = bk * BLOCK_SIZE + k;
-                uint64_t global_b_col = bj * BLOCK_SIZE + j;
-                // Accumulate the partial sum
-                partial_sum += a.d[global_a_row][global_a_col] * b.d[global_b_row][global_b_col];
+              // Calculate the indices in the global matrix
+              uint64_t global_a_row = bi * BLOCK_SIZE + i;
+              uint64_t global_a_col = bk * BLOCK_SIZE + k;
+              uint64_t global_b_row = bk * BLOCK_SIZE + k;
+              uint64_t global_b_col = bj * BLOCK_SIZE + j;
+              // Accumulate the partial sum
+              partial_sum += a.d[global_a_row][global_a_col] *
+                             b.d[global_b_row][global_b_col];
             }
             // Update the result matrix C
             c.d[global_c_row][global_c_col] += partial_sum;
