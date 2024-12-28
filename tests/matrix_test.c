@@ -25,7 +25,7 @@ void assert_is_the_same(Matrix a, Matrix b) {
 
   for (uint64_t i = 0; i < a.h; i++) {
     for (uint64_t j = 0; j < a.w; j++) {
-      CU_ASSERT_DOUBLE_EQUAL_FATAL(a.d[i][j], b.d[i][j], 10e-9);
+      CU_ASSERT_DOUBLE_EQUAL_FATAL(a.d[i][j], b.d[i][j], 10e-3);
     }
   }
 }

@@ -8,9 +8,9 @@ Matrix allocate_matrix_data(uint64_t width, uint64_t height) {
   matrix.w = width;
   matrix.h = height;
 
-  matrix.d = (double **)malloc(height * sizeof(double *));
+  matrix.d = (float **)malloc(height * sizeof(float *));
   for (uint64_t i = 0; i < height; i++) {
-    matrix.d[i] = (double *)malloc(width * sizeof(double));
+    matrix.d[i] = (float *)malloc(width * sizeof(float));
   }
   return matrix;
 }

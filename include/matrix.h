@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 typedef struct {
-  double **d;
+  float **d;
   uint64_t w;
   uint64_t h;
 } Matrix;
