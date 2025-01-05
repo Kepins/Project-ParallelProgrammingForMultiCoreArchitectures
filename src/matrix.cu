@@ -105,13 +105,12 @@ __global__ void matrixMultiplyKernel(Matrix d_a, Matrix d_b, Matrix d_c) {
 
 void cuda_multiplicate(Matrix h_a, Matrix h_b, Matrix h_c) {
   Matrix d_a = {NULL, h_a.w, h_a.h}, d_b = {NULL, h_b.w, h_b.h}, d_c = {NULL, h_c.w, h_c.h};
+  cudaMalloc((void**)&d_a.d, sizeof(float) * d_a.w * d_a.h);
+  cudaMalloc((void**)&d_b.d, sizeof(float) * d_b.w * d_b.h);
+  cudaMalloc((void**)&d_c.d, sizeof(float) * d_c.w * d_c.h);
 
-  cudaMallocManaged((void**)&d_a.d, sizeof(float) * d_a.w * d_a.h);
-  cudaMallocManaged((void**)&d_b.d, sizeof(float) * d_b.w * d_b.h);
-  cudaMallocManaged((void**)&d_c.d, sizeof(float) * d_c.w * d_c.h);
-
-  memcpy(d_a.d, h_a.d, sizeof(float) * h_a.h * h_a.w);
-  memcpy(d_b.d, h_b.d, sizeof(float) * h_b.h * h_b.w);
+  cudaMemcpy(d_a.d, h_a.d, sizeof(float) * h_a.h * h_a.w, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_b.d, h_b.d, sizeof(float) * h_b.h * h_b.w, cudaMemcpyHostToDevice);
 
   const int TILE_SIZE = 16;
   dim3 blockDim(TILE_SIZE, TILE_SIZE);
@@ -120,11 +119,72 @@ void cuda_multiplicate(Matrix h_a, Matrix h_b, Matrix h_c) {
 
   cudaDeviceSynchronize();
 
-  memcpy(h_c.d, d_c.d, sizeof(float) * h_c.h * h_c.w);
+  cudaMemcpy(h_c.d, d_c.d, sizeof(float) * h_c.h * h_c.w, cudaMemcpyDeviceToHost);
 
   cudaFree(d_c.d);
   cudaFree(d_b.d);
   cudaFree(d_a.d);
 }
 
-void cuda_multiplicate2(Matrix a, Matrix b, Matrix c) {}
+
+__global__ void matrixMultiplyKernel2(Matrix d_a, Matrix d_b, Matrix d_c) {
+    const int TILE_SIZE = 16;
+    __shared__ float tile_a[TILE_SIZE][TILE_SIZE];
+    __shared__ float tile_b[TILE_SIZE][TILE_SIZE];
+
+    int row = blockIdx.y * TILE_SIZE + threadIdx.y;
+    int col = blockIdx.x * TILE_SIZE + threadIdx.x;
+
+    float sum = 0.0f;
+
+    for (int tileIdx = 0; tileIdx < (d_a.w + TILE_SIZE - 1) / TILE_SIZE; ++tileIdx) {
+        if (row < d_a.h && (tileIdx * TILE_SIZE + threadIdx.x) < d_a.w) {
+            tile_a[threadIdx.y][threadIdx.x] = *get_element(d_a, row, tileIdx * TILE_SIZE + threadIdx.x);
+        } else {
+            tile_a[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+
+        if (col < d_b.w && (tileIdx * TILE_SIZE + threadIdx.y) < d_b.h) {
+            tile_b[threadIdx.y][threadIdx.x] = *get_element(d_b, tileIdx * TILE_SIZE + threadIdx.y, col);
+        } else {
+            tile_b[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+
+        __syncthreads();
+
+        for (int k = 0; k < TILE_SIZE; ++k) {
+            sum += tile_a[threadIdx.y][k] * tile_b[k][threadIdx.x];
+        }
+
+        __syncthreads();
+    }
+
+    if (row < d_c.h && col < d_c.w) {
+        *get_element(d_c, row, col) = sum;
+    }
+}
+
+
+
+void cuda_multiplicate2(Matrix h_a, Matrix h_b, Matrix h_c) {
+  Matrix d_a = {NULL, h_a.w, h_a.h}, d_b = {NULL, h_b.w, h_b.h}, d_c = {NULL, h_c.w, h_c.h};
+  cudaMalloc((void**)&d_a.d, sizeof(float) * d_a.w * d_a.h);
+  cudaMalloc((void**)&d_b.d, sizeof(float) * d_b.w * d_b.h);
+  cudaMalloc((void**)&d_c.d, sizeof(float) * d_c.w * d_c.h);
+
+  cudaMemcpy(d_a.d, h_a.d, sizeof(float) * h_a.h * h_a.w, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_b.d, h_b.d, sizeof(float) * h_b.h * h_b.w, cudaMemcpyHostToDevice);
+
+  const int TILE_SIZE = 16;
+  dim3 blockDim(TILE_SIZE, TILE_SIZE);
+  dim3 gridDim((d_c.w + TILE_SIZE - 1) / TILE_SIZE, (d_c.h + TILE_SIZE - 1) / TILE_SIZE);
+  matrixMultiplyKernel2<<<gridDim, blockDim>>>(d_a, d_b, d_c);
+
+  cudaDeviceSynchronize();
+
+  cudaMemcpy(h_c.d, d_c.d, sizeof(float) * h_c.h * h_c.w, cudaMemcpyDeviceToHost);
+
+  cudaFree(d_c.d);
+  cudaFree(d_b.d);
+  cudaFree(d_a.d);
+}

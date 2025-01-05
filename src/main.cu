@@ -10,14 +10,14 @@ int main(void) {
   init_rand();
 
   const uint64_t MATRIX_A_HEIGHT = 8192;
-  const uint64_t MATRIX_A_WIDTH = 1280;
+  const uint64_t MATRIX_A_WIDTH = 2048;
   const uint64_t MATRIX_B_HEIGHT = MATRIX_A_WIDTH;
-  const uint64_t MATRIX_B_WIDTH = 1280;
+  const uint64_t MATRIX_B_WIDTH = 1024;
   const uint64_t MATRIX_C_HEIGHT = MATRIX_A_HEIGHT;
   const uint64_t MATRIX_C_WIDTH = MATRIX_B_WIDTH;
 
   double start, end;
-  double time_spent, time_spent_p, time_spent_p2, time_spent_c;
+  double time_spent, time_spent_p, time_spent_p2, time_spent_c, time_spent_c2;
 
   Matrix a = allocate_matrix_data(MATRIX_A_WIDTH, MATRIX_A_HEIGHT);
   Matrix b = allocate_matrix_data(MATRIX_B_WIDTH, MATRIX_B_HEIGHT);
@@ -59,6 +59,15 @@ int main(void) {
   printf("CUDA matrix multiplication took %lf seconds\n", time_spent_c);
 
   printf("Speed up: %lf\n", time_spent / time_spent_c);
+
+  start = omp_get_wtime();
+  cuda_multiplicate(a, b, c);
+  end = omp_get_wtime();
+
+  time_spent_c2 = (double)(end - start);
+  printf("CUDA2 matrix multiplication took %lf seconds\n", time_spent_c2);
+
+  printf("Speed up: %lf\n", time_spent / time_spent_c2);
 
   free_matrix_data(c);
   free_matrix_data(b);
